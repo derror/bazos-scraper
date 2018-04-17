@@ -17,6 +17,9 @@ class AdCategory
     /** @var int */
     protected $portal;
 
+    /** @var array */
+    protected $subcategories;
+
     /**
      * @return string
      */
@@ -64,4 +67,21 @@ class AdCategory
     {
         $this->portal = $portal;
     }
+
+    /**
+     * @return array
+     */
+    public function getSubcategories()
+    {
+        return $this->subcategories;
+    }
+
+    /**
+     * @param array $subcategories
+     */
+    public function setSubcategories($subcategories)
+    {
+        $this->subcategories = $subcategories;
+    }
+
 }

@@ -3,6 +3,7 @@
 namespace BazosScraper;
 
 use BazosScraper\Model\AdCategory;
+use BazosScraper\Model\AdSubcategory;
 
 /**
  * Class Scraper
@@ -56,6 +57,8 @@ class Scraper
     }
 
     /**
+     * Will return general categories
+     *
      * @return AdCategory[]
      * @throws \Exception
      */
@@ -95,14 +98,62 @@ class Scraper
         return $categories;
     }
 
+    /**
+     * Will return all categories with subcategories
+     *
+     * @return AdCategory[]
+     * @throws \Exception
+     */
     public function getCategoriesTree()
     {
-        // @TODO
+        // load categories
+        $categories = $this->getCategories();
+
+        foreach ($categories as $category) {
+            $category->setSubcategories($this->getSubcategories($category));
+        }
+        return $categories;
     }
 
-    protected function getSubcategories(Model\AdCategory $category)
+    /**
+     * Will return all subcategories for given category
+     *
+     * @param AdCategory $category
+     * @return array
+     * @throws \Exception
+     */
+    protected function getSubcategories(AdCategory $category)
     {
-        // @TODO
+        // disable libxml errors due to some HTML syntax errors
+        libxml_use_internal_errors(true);
+
+        // subcategory wrapper class name
+        $subcategoryWrapperClassName = "barvaleva";
+
+        // load HTML of the page
+        $categoryPage  = $this->fetchData($category->getUrl());
+        $subcategories = [];
+        $dom           = new \DOMDocument();
+        $dom->loadHTML($categoryPage);
+        $divs = $dom->getElementsByTagName('div');
+
+        foreach ($divs as $div) {
+            if ($div->getAttribute('class') == $subcategoryWrapperClassName) {
+                foreach ($div->childNodes as $item) {
+                    // skip empty elements
+                    if ($item->localName !== 'a') {
+                        continue;
+                    }
+                    $subcategory = new AdSubcategory();
+                    $subcategory->setName($item->textContent);
+                    $subcategory->setUrl(
+                        $this->composeFullCategoryUrl($item->getAttribute('href'), $category->getUrl())
+                    );
+                    $subcategories[] = $subcategory;
+                }
+            }
+        }
+        return $subcategories;
     }
 
     /**
@@ -138,6 +189,24 @@ class Scraper
         curl_close($ch);
 
         return $response;
+    }
+
+    /**
+     * Transform relative URI to the full subcategory URL
+     *
+     * @param $subcategoryUrl
+     * @param $categoryAbsoluteUrl
+     * @return string
+     */
+    private function composeFullCategoryUrl($subcategoryUrl, $categoryAbsoluteUrl)
+    {
+        if (!parse_url($subcategoryUrl, PHP_URL_SCHEME)) {
+            $subcategoryUrl = implode('/', [
+                trim($categoryAbsoluteUrl, '/'),
+                trim($subcategoryUrl, '/')
+            ]);
+        }
+        return $subcategoryUrl;
     }
 
 }
