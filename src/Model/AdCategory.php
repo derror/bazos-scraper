@@ -14,6 +14,9 @@ class AdCategory
     /** @var string */
     protected $url;
 
+    /** @var int */
+    protected $portal;
+
     /**
      * @return string
      */
@@ -46,5 +49,19 @@ class AdCategory
         $this->url = $url;
     }
 
+    /**
+     * @return int
+     */
+    public function getPortal()
+    {
+        return $this->portal;
+    }
 
+    /**
+     * @param int $portal
+     */
+    public function setPortal($portal)
+    {
+        $this->portal = $portal;
+    }
 }
