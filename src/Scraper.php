@@ -187,7 +187,6 @@ class Scraper
         }
 
         curl_close($ch);
-
         return $response;
     }
 
